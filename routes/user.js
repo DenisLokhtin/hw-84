@@ -3,6 +3,8 @@ const User = require('../models/User');
 
 const router = express.Router();
 
+
+
 router.post('/', async (req, res) => {
     const body = {
         username: req.body.username,

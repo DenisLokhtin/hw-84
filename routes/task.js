@@ -3,47 +3,73 @@ const Task = require('../models/Task');
 
 const router = express.Router();
 
+const AuthorizationCheck = (req, res, next) => {
+    const token = req.get('Authorization');
+    if (!token) {
+        return req.status(401).send({error: 'Token not provided!'});
+    }
+    next();
+};
+
 router.get('/', async (req, res) => {
     try {
         const query = {};
         if (req.query.album) {
             query.album = req.query.album
         }
-        const Tracks = await Task.find(query);
-        res.send(Tracks);
+        const Tasks = await Task.find(query);
+        return res.send(Tasks);
     } catch (e) {
-        res.sendStatus(500);
+        return res.sendStatus(500);
     }
 });
 
-router.get('/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
     try {
-        const Tracks = await Task.findById(req.params.id);
+        const Tasks = await Task.findById(req.params.id);
+        Task.updateOne({_id: req.params.id}, {status: req.body.status}, function (err, obj) {
+            if (Tasks) {
+                return res.send('done');
+            } else {
+                return res.sendStatus(404);
+            }
+        });
 
-        if (Tracks) {
-            res.send(Tracks);
-        } else {
-            res.sendStatus(404).send({error: 'Tracks not found'})
-        }
     } catch (e) {
-        res.sendStatus(500);
+        return res.sendStatus(500);
     }
 });
 
 router.post('/', async (req, res) => {
     const body = {
+        user: req.body.user,
         title: req.body.title,
-        album: req.body.album,
-        duration: req.body.duration
+        description: req.body.description,
+        status: req.body.status
     };
 
-    const tracks = new Task(body);
+    const Tasks = new Task(body);
 
     try {
-        await tracks.save()
-        res.send(tracks);
+        await Tasks.save()
+        return res.send(Tasks);
     } catch (e) {
-        res.sendStatus(400);
+        return res.sendStatus(400);
+    }
+});
+
+router.delete('/:id', async (req, res) => {
+    try {
+        const Tasks = await Task.findById(req.params.id);
+        Task.deleteOne({_id: req.params.id}, function (err, obj) {
+            if (Tasks) {
+                return res.send('done');
+            } else {
+                return res.sendStatus(404);
+            }
+        });
+    } catch (e) {
+        return res.sendStatus(500);
     }
 });
 
