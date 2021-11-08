@@ -1,4 +1,4 @@
-const nanoid = require("nanoid");
+const {nanoid} = require("nanoid");
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
@@ -24,7 +24,7 @@ const UserSchema = new Schema({
     },
 });
 
-UserSchema.pre('save',  async function (next) {
+UserSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
 
     const salt = await bcrypt.genSalt(SALT_WORK_FACTOR);
@@ -46,8 +46,8 @@ UserSchema.methods.checkPasswords = function (password) {
     return bcrypt.compare(password, this.password);
 };
 
-UserSchema.methods.generateToken = function () {
-    this.token = nanoid()
+UserSchema.methods.generateToken = function (size) {
+    this.token = nanoid(size)
 };
 
 const User = mongoose.model('User', UserSchema);

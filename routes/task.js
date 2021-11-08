@@ -6,12 +6,12 @@ const router = express.Router();
 const AuthorizationCheck = (req, res, next) => {
     const token = req.get('Authorization');
     if (!token) {
-        return req.status(401).send({error: 'Token not provided!'});
+        return res.status(401).send({error: 'Token not provided!'});
     }
     next();
 };
 
-router.get('/', async (req, res) => {
+router.get('/',  async (req, res) => {
     try {
         const query = {};
         if (req.query.album) {
@@ -25,9 +25,23 @@ router.get('/', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
+    const body = {};
+
+    if (req.body.status) {
+        body.status = req.body.status
+    }
+
+    if (req.body.title) {
+        body.title = req.body.title
+    }
+
+    if (req.body.description) {
+        body.description = req.body.description
+    }
+
     try {
         const Tasks = await Task.findById(req.params.id);
-        Task.updateOne({_id: req.params.id}, {status: req.body.status}, function (err, obj) {
+        Task.updateOne({_id: req.params.id}, body, function (err, obj) {
             if (Tasks) {
                 return res.send('done');
             } else {
@@ -40,7 +54,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', AuthorizationCheck, async (req, res) => {
     const body = {
         user: req.body.user,
         title: req.body.title,

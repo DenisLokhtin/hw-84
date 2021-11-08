@@ -12,12 +12,12 @@ router.post('/', async (req, res) => {
         token: ''
     };
 
-    const Users = new User(body);
+    const user = new User(body);
 
     try {
-        User.generateToken();
-        await Users.save();
-        res.send(Users);
+        user.generateToken();
+        await user.save();
+        res.send(user);
     } catch (e) {
         console.log(e)
         res.sendStatus(400);
@@ -42,10 +42,11 @@ router.post('/sessions', async (req, res) => {
     if (!isMatch) {
         return res.status(400).send({error: 'password is wrong'})
     }
+    //
+    // const user = new User.(userData)
 
-    User.generateToken();
+    User.generateToken(10);
     await User.save();
-
     res.send({token: 'token'})
 });
 
