@@ -11,7 +11,7 @@ const AuthorizationCheck = (req, res, next) => {
     next();
 };
 
-router.get('/',  async (req, res) => {
+router.get('/', AuthorizationCheck, async (req, res) => {
     try {
         const query = {};
         if (req.query.album) {
@@ -20,12 +20,17 @@ router.get('/',  async (req, res) => {
         const Tasks = await Task.find(query);
         return res.send(Tasks);
     } catch (e) {
+        console.log(e)
         return res.sendStatus(500);
     }
 });
 
 router.put('/:id', async (req, res) => {
     const body = {};
+
+    if (req.body.user) {
+        return res.status(418).send({error: 'you cannot change user!'});
+    }
 
     if (req.body.status) {
         body.status = req.body.status
@@ -65,7 +70,7 @@ router.post('/', AuthorizationCheck, async (req, res) => {
     const Tasks = new Task(body);
 
     try {
-        await Tasks.save()
+        await Tasks.save();
         return res.send(Tasks);
     } catch (e) {
         return res.sendStatus(400);

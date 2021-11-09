@@ -3,14 +3,18 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-
-
 router.post('/', async (req, res) => {
     const body = {
         username: req.body.username,
         password: req.body.password,
         token: ''
     };
+
+    const Username = await User.findOne({username: req.body.username});
+
+    if (Username) {
+            return res.status(418).send({error: 'Such user already exists!'});
+    }
 
     const user = new User(body);
 
