@@ -42,7 +42,7 @@ UserSchema.set('toJSON', {
     }
 });
 
-UserSchema.methods.checkPasswords = function (password) {
+UserSchema.methods.checkPassword = function (password) {
     return bcrypt.compare(password, this.password);
 };
 

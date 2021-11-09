@@ -37,17 +37,15 @@ router.post('/sessions', async (req, res) => {
         return res.status(400).send({error: 'Username not found'})
     }
 
-    const isMatch = await User.checkPassword(req.body.password);
+    const isMatch = await user.checkPassword(req.body.password);
 
     if (!isMatch) {
         return res.status(400).send({error: 'password is wrong'})
     }
-    //
-    // const user = new User.(userData)
 
-    User.generateToken(10);
-    await User.save();
-    res.send({token: 'token'})
+    user.generateToken(10);
+    await user.save();
+    res.send({message: 'username and password correct', user})
 });
 
 module.exports = router;
