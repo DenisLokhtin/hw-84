@@ -1,94 +1,73 @@
-const express = require('express');
-const Task = require('../models/Task');
-
+const express = require("express");
+const auth = require("../middleware/auth");
+const Task = require("../models/Task");
 const router = express.Router();
 
-const AuthorizationCheck = (req, res, next) => {
-    const token = req.get('Authorization');
-    if (!token) {
-        return res.status(401).send({error: 'Token not provided!'});
-    }
-    next();
-};
-
-router.get('/', AuthorizationCheck, async (req, res) => {
+router.get("/", auth, async (req, res) => {
     try {
-        const query = {};
-        if (req.query.album) {
-            query.album = req.query.album
+        const tasks = await Task.find({user: req.user._id});
+        return res.send(tasks);
+    } catch (e) {
+        return res.status(400).send(e);
+    }
+});
+
+router.post("/", auth, async (req, res) => {
+    try {
+        const task = new Task(req.body);
+
+        if (!req.body.user) {
+            task.user = req.user._id;
         }
-        const Tasks = await Task.find(query);
-        return res.send(Tasks);
+
+        await task.save();
+        return res.send(task);
     } catch (e) {
-        console.log(e)
-        return res.sendStatus(500);
+        return res.status(400).send(e);
     }
 });
 
-router.put('/:id', async (req, res) => {
-    const body = {};
-
-    if (req.body.user) {
-        return res.status(418).send({error: 'you cannot change user!'});
-    }
-
-    if (req.body.status) {
-        body.status = req.body.status
-    }
-
-    if (req.body.title) {
-        body.title = req.body.title
-    }
-
-    if (req.body.description) {
-        body.description = req.body.description
-    }
-
+router.put("/:id", auth, async (req, res) => {
     try {
-        const Tasks = await Task.findById(req.params.id);
-        Task.updateOne({_id: req.params.id}, body, function (err, obj) {
-            if (Tasks) {
-                return res.send('done');
-            } else {
-                return res.sendStatus(404);
+        const taskData = req.body;
+        const task = await Task.findOne({_id: req.params.id});
+
+        if (req.user._id.toString() !== task.user.toString()) {
+            return res.status(401).send("No task");
+        }
+
+        await Task.findByIdAndUpdate(
+            {_id: req.params.id},
+            {
+                ...taskData,
+            },
+            {new: true},
+            (e) => {
+                if (e) return res.status(500).send(e);
             }
+        );
+
+        return res.send("successful");
+    } catch (e) {
+        return res.status(400).send(e);
+    }
+});
+
+router.delete("/:id", auth, async (req, res) => {
+    try {
+        const task = await Task.findOne({_id: req.params.id});
+
+        if (req.user._id.toString() !== task.user.toString()) {
+            return res.status(400).send("You cannot delete");
+        }
+
+        await Task.findByIdAndDelete(req.params.id, (e) => {
+            if (e) return res.status(500).send(e);
         });
 
+        return res.send("Deleted");
     } catch (e) {
-        return res.sendStatus(500);
-    }
-});
-
-router.post('/', AuthorizationCheck, async (req, res) => {
-    const body = {
-        user: req.body.user,
-        title: req.body.title,
-        description: req.body.description,
-        status: req.body.status
-    };
-
-    const Tasks = new Task(body);
-
-    try {
-        await Tasks.save();
-        return res.send(Tasks);
-    } catch (e) {
-        return res.sendStatus(400);
-    }
-});
-
-router.delete('/:id', async (req, res) => {
-    try {
-        const Tasks = await Task.findById(req.params.id);
-        Task.deleteOne({_id: req.params.id}, function (err, obj) {
-            if (Tasks) {
-                return res.send('done');
-            } else {
-                return res.sendStatus(404);
-            }
-        });
-    } catch (e) {
-        return res.sendStatus(500);
+        return res.status(400).send(e);
     }
 });
 

@@ -16,7 +16,7 @@ app.use('/user', user);
 
 
 const run = async () => {
-    await mongoose.connect('mongodb://localhost/todo');
+    await mongoose.connect('mongodb://localhost/ToDo');
 
     app.listen(port, () => {
         console.log(`Server started on ${port} port!`);
